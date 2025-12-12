@@ -6,10 +6,21 @@ export class ElevenLabsService {
 
   constructor() {
     this.apiKey = ELEVENLABS_API_KEY || '';
+    if (this.apiKey && this.apiKey !== 'your_elevenlabs_api_key_here' && this.apiKey.trim() !== '') {
+      console.log('ElevenLabs API key loaded successfully');
+    } else {
+      console.warn('ElevenLabs API key not found. Please set VITE_ELEVENLABS_API_KEY in your .env file.');
+    }
   }
 
   async synthesizeSpeech(text: string, voiceId: string): Promise<Blob> {
-    if (!this.apiKey || this.apiKey === 'your_elevenlabs_api_key_here') {
+    if (!this.apiKey || this.apiKey === 'your_elevenlabs_api_key_here' || this.apiKey.trim() === '') {
+      console.warn('ElevenLabs API key not configured. Using mock audio. Please set VITE_ELEVENLABS_API_KEY in your .env file.');
+      return this.generateMockAudio(text);
+    }
+
+    if (!voiceId || voiceId.trim() === '') {
+      console.error('Voice ID is missing. Cannot synthesize speech.');
       return this.generateMockAudio(text);
     }
 
@@ -32,12 +43,17 @@ export class ElevenLabsService {
       });
 
       if (!response.ok) {
-        throw new Error(`ElevenLabs API error: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error(`ElevenLabs API error (${response.status}):`, response.statusText, errorText);
+        throw new Error(`ElevenLabs API error: ${response.status} ${response.statusText}`);
       }
 
-      return await response.blob();
+      const blob = await response.blob();
+      console.log('Successfully synthesized speech with ElevenLabs');
+      return blob;
     } catch (error) {
-      console.error('Error synthesizing speech:', error);
+      console.error('Error synthesizing speech with ElevenLabs:', error);
+      console.warn('Falling back to mock audio');
       return this.generateMockAudio(text);
     }
   }
@@ -116,7 +132,8 @@ export class ElevenLabsService {
   }
 
   async getVoices() {
-    if (!this.apiKey || this.apiKey === 'your_elevenlabs_api_key_here') {
+    if (!this.apiKey || this.apiKey === 'your_elevenlabs_api_key_here' || this.apiKey.trim() === '') {
+      console.warn('ElevenLabs API key not configured. Cannot fetch voices.');
       return [];
     }
 
@@ -128,11 +145,13 @@ export class ElevenLabsService {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch voices: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error(`Failed to fetch voices (${response.status}):`, response.statusText, errorText);
+        throw new Error(`Failed to fetch voices: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
-      return data.voices;
+      return data.voices || [];
     } catch (error) {
       console.error('Error fetching voices:', error);
       return [];

@@ -1,6 +1,6 @@
 export interface Participant {
   id: string;
-  role: 'judge' | 'defense' | 'jury';
+  role: 'judge' | 'defense' | 'jury' | 'prosecutor' | 'witness' | 'user';
   display_name: string;
   voice_id: string;
   persona: string;
@@ -18,7 +18,7 @@ export interface Scenario {
 export interface DialogueLine {
   id: string;
   scenario_id: string;
-  participant_role: 'judge' | 'defense' | 'jury';
+  participant_role: 'judge' | 'defense' | 'jury' | 'prosecutor' | 'witness';
   text: string;
   order_index: number;
   created_at: string;

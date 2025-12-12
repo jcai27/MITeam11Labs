@@ -20,23 +20,58 @@ function App() {
   useEffect(() => {
     // Simulate loading data
     const dummyParticipants: Participant[] = [
-      { id: '1', name: 'Judge', role: 'judge', avatarUrl: '/avatars/judge.png' },
-      { id: '2', name: 'Prosecutor', role: 'prosecutor', avatarUrl: '/avatars/prosecutor.png' },
-      { id: '3', name: 'Defense Attorney', role: 'defense', avatarUrl: '/avatars/defense.png' },
-      { id: '4', name: 'Witness', role: 'witness', avatarUrl: '/avatars/witness.png' },
-      { id: '5', name: 'You', role: 'user', avatarUrl: '/avatars/user.png' },
+      { 
+        id: '1', 
+        role: 'judge', 
+        display_name: 'Judge', 
+        voice_id: 'pNInz6obpgDQGcFmaJgB', // Adam - authoritative
+        persona: 'You are a presiding judge, maintaining order and ensuring proper legal procedure.',
+        created_at: new Date().toISOString()
+      },
+      { 
+        id: '2', 
+        role: 'prosecutor', 
+        display_name: 'Prosecutor', 
+        voice_id: '21m00Tcm4TlvDq8ikWAM', // Rachel - professional
+        persona: 'You are a prosecutor presenting the case against the defendant. Present evidence clearly and persuasively.',
+        created_at: new Date().toISOString()
+      },
+      { 
+        id: '3', 
+        role: 'defense', 
+        display_name: 'Defense Attorney', 
+        voice_id: '21m00Tcm4TlvDq8ikWAM', // Rachel - professional
+        persona: 'You are a defense attorney representing the defendant. Present a strong, logical defense.',
+        created_at: new Date().toISOString()
+      },
+      { 
+        id: '4', 
+        role: 'witness', 
+        display_name: 'Witness', 
+        voice_id: 'AZnzlk1XvdvUeBnXmlld', // Domi - neutral
+        persona: 'You are a witness testifying in court. Answer questions truthfully and clearly.',
+        created_at: new Date().toISOString()
+      },
+      { 
+        id: '5', 
+        role: 'user', 
+        display_name: 'You', 
+        voice_id: '', // User speaks with their own voice
+        persona: 'You are participating in the courtroom simulation.',
+        created_at: new Date().toISOString()
+      },
     ];
 
     const dummyScenarios: Scenario[] = [
-      { id: '1', name: 'Opening Statements', description: 'Initial arguments from both sides.' },
-      { id: '2', name: 'Witness Examination', description: 'Questioning of a witness.' },
-      { id: '3', name: 'Closing Arguments', description: 'Final summaries and appeals.' },
+      { id: '1', name: 'Opening Statements', description: 'Initial arguments from both sides.', created_at: new Date().toISOString() },
+      { id: '2', name: 'Witness Examination', description: 'Questioning of a witness.', created_at: new Date().toISOString() },
+      { id: '3', name: 'Closing Arguments', description: 'Final summaries and appeals.', created_at: new Date().toISOString() },
     ];
 
     const dummyDialogueLines: DialogueLine[] = [
-      { id: 'dl1', scenario_id: '1', speaker: 'Judge', text: 'Good morning, ladies and gentlemen. We are here today to hear the case of...' , order_index: 0 },
-      { id: 'dl2', scenario_id: '1', speaker: 'Prosecutor', text: 'Your Honor, members of the jury, the evidence will show that the defendant is guilty beyond a reasonable doubt.', order_index: 1 },
-      { id: 'dl3', scenario_id: '1', speaker: 'Defense Attorney', text: 'May it please the court, the defense will prove that the prosecution lacks sufficient evidence.', order_index: 2 },
+      { id: 'dl1', scenario_id: '1', participant_role: 'judge', text: 'Good morning, ladies and gentlemen. We are here today to hear the case of...', order_index: 0, created_at: new Date().toISOString() },
+      { id: 'dl2', scenario_id: '1', participant_role: 'defense', text: 'Your Honor, members of the jury, the defense will prove that the prosecution lacks sufficient evidence.', order_index: 1, created_at: new Date().toISOString() },
+      { id: 'dl3', scenario_id: '1', participant_role: 'jury', text: 'We acknowledge the proceedings and are ready to hear the case.', order_index: 2, created_at: new Date().toISOString() },
     ];
 
     setParticipants(dummyParticipants);
@@ -71,9 +106,9 @@ function App() {
       // In a real application, this would load dialogue lines based on selectedScenario
       // For now, we use dummy data
       const dummyDialogueLines: DialogueLine[] = [
-        { id: 'dl1', scenario_id: '1', speaker: 'Judge', text: 'Good morning, ladies and gentlemen. We are here today to hear the case of...' , order_index: 0 },
-        { id: 'dl2', scenario_id: '1', speaker: 'Prosecutor', text: 'Your Honor, members of the jury, the evidence will show that the defendant is guilty beyond a reasonable doubt.', order_index: 1 },
-        { id: 'dl3', scenario_id: '1', speaker: 'Defense Attorney', text: 'May it please the court, the defense will prove that the prosecution lacks sufficient evidence.', order_index: 2 },
+        { id: 'dl1', scenario_id: '1', participant_role: 'judge', text: 'Good morning, ladies and gentlemen. We are here today to hear the case of...', order_index: 0, created_at: new Date().toISOString() },
+        { id: 'dl2', scenario_id: '1', participant_role: 'defense', text: 'Your Honor, members of the jury, the defense will prove that the prosecution lacks sufficient evidence.', order_index: 1, created_at: new Date().toISOString() },
+        { id: 'dl3', scenario_id: '1', participant_role: 'jury', text: 'We acknowledge the proceedings and are ready to hear the case.', order_index: 2, created_at: new Date().toISOString() },
       ];
       setDialogueLines(dummyDialogueLines);
     }

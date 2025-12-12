@@ -35,7 +35,7 @@ export function ParticipantTile({ participant, isActive, currentText, userStream
         ) : (
           <img
             src={avatarUrl}
-            alt={participant.name}
+            alt={participant.display_name}
             className="w-full h-full object-cover"
           />
         )}
@@ -48,7 +48,7 @@ export function ParticipantTile({ participant, isActive, currentText, userStream
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-white font-semibold text-sm">
-                {participant.name}
+                {participant.display_name}
               </h3>
               <p className="text-gray-300 text-xs capitalize">{participant.role}</p>
             </div>

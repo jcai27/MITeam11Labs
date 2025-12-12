@@ -156,7 +156,7 @@ export class DialogueController {
 
       const context = this.getContextForRole(participant.role);
       const dialogue = await openAIService.generateDialogue(
-        participant.name, // Use participant.name instead of participant.display_name
+        participant.display_name,
         participant.persona,
         context,
         this.dialogueHistory
@@ -164,7 +164,7 @@ export class DialogueController {
 
       if (!this.isPlaying) break;
 
-      this.dialogueHistory.push(`${participant.name}: ${dialogue}`);
+      this.dialogueHistory.push(`${participant.display_name}: ${dialogue}`);
       await this.speakLine(dialogue, participant);
 
       turnCount++;
@@ -182,9 +182,17 @@ export class DialogueController {
         'You are presiding over a courtroom proceeding.',
         'Maintain order and ensure proper legal procedure.',
       ],
+      prosecutor: [
+        'You are the prosecutor presenting the case against the defendant.',
+        'Present evidence clearly and persuasively.',
+      ],
       defense: [
         'You are representing the defendant in this case.',
         'Present a strong, logical defense.',
+      ],
+      witness: [
+        'You are a witness testifying in court.',
+        'Answer questions truthfully and clearly.',
       ],
       jury: [
         'You are part of the jury evaluating this case.',
