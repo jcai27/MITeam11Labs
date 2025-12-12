@@ -12,6 +12,8 @@ interface ControlPanelProps {
   isPlaying: boolean;
   isPaused: boolean;
   mode: DialogueMode;
+  onUserSpeechStart: () => void; // Add prop for starting speech recognition
+  onUserSpeechStop: () => void; // Add prop for stopping speech recognition
 }
 
 export function ControlPanel({
@@ -26,6 +28,8 @@ export function ControlPanel({
   isPlaying,
   isPaused,
   mode,
+  onUserSpeechStart,
+  onUserSpeechStop,
 }: ControlPanelProps) {
   return (
     <div className="w-full max-w-6xl mx-auto bg-gray-800 rounded-lg p-6 shadow-xl">
@@ -118,6 +122,22 @@ export function ControlPanel({
               </>
             )}
           </div>
+          {isPlaying && mode === 'ai' && (
+            <div className="flex space-x-2 mt-2">
+              <button
+                onClick={onUserSpeechStart}
+                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                Start Listening
+              </button>
+              <button
+                onClick={onUserSpeechStop}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                Stop Listening
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

@@ -4,10 +4,18 @@ interface ParticipantTileProps {
   participant: Participant;
   isActive: boolean;
   currentText?: string;
+  userStream?: MediaStream | null; // Add userStream prop
 }
 
-export function ParticipantTile({ participant, isActive, currentText }: ParticipantTileProps) {
+export function ParticipantTile({ participant, isActive, currentText, userStream }: ParticipantTileProps) {
   const avatarUrl = participant.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participant.role}`;
+
+  // Use a ref to attach the media stream to the video element
+  const videoRef = (videoElement: HTMLVideoElement | null) => {
+    if (videoElement && userStream) {
+      videoElement.srcObject = userStream;
+    }
+  };
 
   return (
     <div
@@ -16,11 +24,21 @@ export function ParticipantTile({ participant, isActive, currentText }: Particip
       }`}
     >
       <div className="aspect-video relative">
-        <img
-          src={avatarUrl}
-          alt={participant.display_name}
-          className="w-full h-full object-cover"
-        />
+        {userStream ? (
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted // Mute local video to avoid echo
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <img
+            src={avatarUrl}
+            alt={participant.name}
+            className="w-full h-full object-cover"
+          />
+        )}
 
         {isActive && (
           <div className="absolute inset-0 bg-blue-500/10 animate-pulse" />
@@ -30,7 +48,7 @@ export function ParticipantTile({ participant, isActive, currentText }: Particip
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-white font-semibold text-sm">
-                {participant.display_name}
+                {participant.name}
               </h3>
               <p className="text-gray-300 text-xs capitalize">{participant.role}</p>
             </div>

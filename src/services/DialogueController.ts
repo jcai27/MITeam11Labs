@@ -10,10 +10,36 @@ export class DialogueController {
   private mode: DialogueMode = 'scripted';
   private listeners: Map<string, Set<Function>> = new Map();
   private dialogueHistory: string[] = [];
+  private speechRecognition: SpeechRecognition | null = null;
 
   constructor() {
     this.audioElement = new Audio();
     this.audioElement.addEventListener('ended', () => this.handleAudioEnded());
+
+    // Initialize SpeechRecognition (using webkitSpeechRecognition for broader compatibility)
+    const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      this.speechRecognition = new SpeechRecognition();
+      this.speechRecognition.continuous = false;
+      this.speechRecognition.interimResults = false;
+      this.speechRecognition.lang = 'en-US';
+
+      this.speechRecognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        this.emit('userSpeechRecognized', transcript);
+        this.dialogueHistory.push(`You: ${transcript}`);
+        console.log('User said:', transcript);
+        // Immediately trigger AI response after user speaks
+        this.playAIDialogue([]); // Participants will be fetched from the App.tsx state
+      };
+
+      this.speechRecognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        this.emit('userSpeechError', event.error);
+      };
+    } else {
+      console.warn('Speech Recognition API not supported in this browser.');
+    }
   }
 
   private emit(event: string, data?: any) {
@@ -56,6 +82,22 @@ export class DialogueController {
     }
   }
 
+  startUserSpeechRecognition() {
+    if (this.speechRecognition && this.mode === 'ai') {
+      this.speechRecognition.start();
+      this.emit('userSpeechStart');
+      console.log('Listening for user input...');
+    }
+  }
+
+  stopUserSpeechRecognition() {
+    if (this.speechRecognition) {
+      this.speechRecognition.stop();
+      this.emit('userSpeechStop');
+      console.log('Stopped listening for user input.');
+    }
+  }
+
   private async playScriptedDialogue(dialogueLines: DialogueLine[], participants: Participant[]) {
     const sortedLines = [...dialogueLines].sort((a, b) => a.order_index - b.order_index);
 
@@ -90,12 +132,31 @@ export class DialogueController {
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
+      // If it's the user's turn or we need user input, activate speech recognition
+      if (this.mode === 'ai' && turnCount % (participants.length + 1) === participants.length) {
+        this.emit('activeSpeaker', 'user');
+        this.startUserSpeechRecognition();
+        await new Promise<void>((resolve) => {
+          const onSpeechRecognized = (transcript: string) => {
+            this.stopUserSpeechRecognition();
+            this.emit('lineEnd', { speaker: 'user' });
+            resolve();
+          };
+          this.on('userSpeechRecognized', onSpeechRecognized);
+          // Remove listener after resolution to prevent multiple calls
+          // This is a simplified approach; in a real app, you might manage listeners more robustly
+          this.on('userSpeechStop', () => this.off('userSpeechRecognized', onSpeechRecognized));
+        });
+        turnCount++;
+        continue; // Skip AI agent turn for this round as user just spoke
+      }
+
       const participantIndex = turnCount % participants.length;
       const participant = participants[participantIndex];
 
       const context = this.getContextForRole(participant.role);
       const dialogue = await openAIService.generateDialogue(
-        participant.display_name,
+        participant.name, // Use participant.name instead of participant.display_name
         participant.persona,
         context,
         this.dialogueHistory
@@ -103,7 +164,7 @@ export class DialogueController {
 
       if (!this.isPlaying) break;
 
-      this.dialogueHistory.push(`${participant.display_name}: ${dialogue}`);
+      this.dialogueHistory.push(`${participant.name}: ${dialogue}`);
       await this.speakLine(dialogue, participant);
 
       turnCount++;

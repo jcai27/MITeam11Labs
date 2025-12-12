@@ -57,8 +57,6 @@ This is perfect for testing the UI and understanding the flow before committing 
 Your `.env` file should look like this:
 
 ```env
-VITE_SUPABASE_URL=https://fxnpgcnifkudueheqhqv.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 VITE_ELEVENLABS_API_KEY=sk_your_elevenlabs_key_here
 VITE_OPENAI_API_KEY=sk-your_openai_key_here
 ```
@@ -130,7 +128,6 @@ WHERE role = 'judge';
 
 - ElevenLabs Docs: [docs.elevenlabs.io](https://docs.elevenlabs.io)
 - OpenAI Docs: [platform.openai.com/docs](https://platform.openai.com/docs)
-- Supabase Docs: [supabase.com/docs](https://supabase.com/docs)
 
 ## Next Steps
 

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { VideoGrid } from './components/VideoGrid';
 import { ControlPanel } from './components/ControlPanel';
-import { supabase } from './lib/supabase';
 import { dialogueController } from './services/DialogueController';
 import { Participant, Scenario, DialogueLine, DialogueMode } from './types';
 
@@ -16,10 +15,42 @@ function App() {
   const [activeSpeaker, setActiveSpeaker] = useState<string | null>(null);
   const [currentText, setCurrentText] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [userStream, setUserStream] = useState<MediaStream | null>(null);
 
   useEffect(() => {
-    loadInitialData();
+    // Simulate loading data
+    const dummyParticipants: Participant[] = [
+      { id: '1', name: 'Judge', role: 'judge', avatarUrl: '/avatars/judge.png' },
+      { id: '2', name: 'Prosecutor', role: 'prosecutor', avatarUrl: '/avatars/prosecutor.png' },
+      { id: '3', name: 'Defense Attorney', role: 'defense', avatarUrl: '/avatars/defense.png' },
+      { id: '4', name: 'Witness', role: 'witness', avatarUrl: '/avatars/witness.png' },
+      { id: '5', name: 'You', role: 'user', avatarUrl: '/avatars/user.png' },
+    ];
+
+    const dummyScenarios: Scenario[] = [
+      { id: '1', name: 'Opening Statements', description: 'Initial arguments from both sides.' },
+      { id: '2', name: 'Witness Examination', description: 'Questioning of a witness.' },
+      { id: '3', name: 'Closing Arguments', description: 'Final summaries and appeals.' },
+    ];
+
+    const dummyDialogueLines: DialogueLine[] = [
+      { id: 'dl1', scenario_id: '1', speaker: 'Judge', text: 'Good morning, ladies and gentlemen. We are here today to hear the case of...' , order_index: 0 },
+      { id: 'dl2', scenario_id: '1', speaker: 'Prosecutor', text: 'Your Honor, members of the jury, the evidence will show that the defendant is guilty beyond a reasonable doubt.', order_index: 1 },
+      { id: 'dl3', scenario_id: '1', speaker: 'Defense Attorney', text: 'May it please the court, the defense will prove that the prosecution lacks sufficient evidence.', order_index: 2 },
+    ];
+
+    setParticipants(dummyParticipants);
+    setScenarios(dummyScenarios);
+    if (dummyScenarios.length > 0) {
+      setSelectedScenario(dummyScenarios[0].id);
+    }
+    setDialogueLines(dummyDialogueLines);
+    setLoading(false);
+
     setupDialogueListeners();
+    startWebcam(); // Start webcam when component mounts
+
+    dialogueController.on('userSpeechRecognized', handleUserSpeech);
 
     return () => {
       dialogueController.off('lineStart', handleLineStart);
@@ -28,56 +59,25 @@ function App() {
       dialogueController.off('pause', handlePause);
       dialogueController.off('resume', handleResume);
       dialogueController.off('stop', handleStop);
+      dialogueController.off('userSpeechRecognized', handleUserSpeech);
+      if (userStream) {
+        userStream.getTracks().forEach(track => track.stop());
+      }
     };
-  }, []);
+  }, [userStream]); // Add userStream to dependency array
 
   useEffect(() => {
     if (selectedScenario) {
-      loadDialogueLines(selectedScenario);
+      // In a real application, this would load dialogue lines based on selectedScenario
+      // For now, we use dummy data
+      const dummyDialogueLines: DialogueLine[] = [
+        { id: 'dl1', scenario_id: '1', speaker: 'Judge', text: 'Good morning, ladies and gentlemen. We are here today to hear the case of...' , order_index: 0 },
+        { id: 'dl2', scenario_id: '1', speaker: 'Prosecutor', text: 'Your Honor, members of the jury, the evidence will show that the defendant is guilty beyond a reasonable doubt.', order_index: 1 },
+        { id: 'dl3', scenario_id: '1', speaker: 'Defense Attorney', text: 'May it please the court, the defense will prove that the prosecution lacks sufficient evidence.', order_index: 2 },
+      ];
+      setDialogueLines(dummyDialogueLines);
     }
   }, [selectedScenario]);
-
-  const loadInitialData = async () => {
-    try {
-      const [participantsResult, scenariosResult] = await Promise.all([
-        supabase.from('participants').select('*').order('role'),
-        supabase.from('scenarios').select('*').order('name'),
-      ]);
-
-      if (participantsResult.data) {
-        setParticipants(participantsResult.data);
-      }
-
-      if (scenariosResult.data) {
-        setScenarios(scenariosResult.data);
-        if (scenariosResult.data.length > 0) {
-          setSelectedScenario(scenariosResult.data[0].id);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading initial data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadDialogueLines = async (scenarioId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('dialogue_lines')
-        .select('*')
-        .eq('scenario_id', scenarioId)
-        .order('order_index');
-
-      if (error) throw error;
-
-      if (data) {
-        setDialogueLines(data);
-      }
-    } catch (error) {
-      console.error('Error loading dialogue lines:', error);
-    }
-  };
 
   const setupDialogueListeners = () => {
     dialogueController.on('lineStart', handleLineStart);
@@ -86,6 +86,13 @@ function App() {
     dialogueController.on('pause', handlePause);
     dialogueController.on('resume', handleResume);
     dialogueController.on('stop', handleStop);
+  };
+
+  const handleUserSpeech = (text: string) => {
+    setCurrentText(`You: ${text}`);
+    setActiveSpeaker('user');
+    // The DialogueController now handles the AI response internally
+    // No need to call openAIService.generateDialogue here
   };
 
   const handleLineStart = (data: any) => {
@@ -145,6 +152,15 @@ function App() {
     dialogueController.stop();
   };
 
+  const startWebcam = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      setUserStream(stream);
+    } catch (error) {
+      console.error('Error accessing webcam:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
@@ -170,6 +186,7 @@ function App() {
             participants={participants}
             activeSpeaker={activeSpeaker}
             currentText={currentText}
+            userStream={userStream}
           />
 
           <ControlPanel
@@ -184,6 +201,8 @@ function App() {
             isPlaying={isPlaying}
             isPaused={isPaused}
             mode={mode}
+            onUserSpeechStart={dialogueController.startUserSpeechRecognition} // Pass function down
+            onUserSpeechStop={dialogueController.stopUserSpeechRecognition} // Pass function down
           />
         </div>
 

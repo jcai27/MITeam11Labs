@@ -35,15 +35,12 @@ npm install
 Update the `.env` file with your API keys:
 
 ```env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 VITE_ELEVENLABS_API_KEY=your_elevenlabs_api_key
 VITE_OPENAI_API_KEY=your_openai_api_key
 ```
 
 **Getting API Keys:**
 
-- **Supabase**: Already configured in this project
 - **ElevenLabs**: Sign up at [elevenlabs.io](https://elevenlabs.io) and get your API key from the profile section
 - **OpenAI**: Get your API key from [platform.openai.com](https://platform.openai.com/api-keys)
 
